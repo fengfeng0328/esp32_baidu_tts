@@ -16,7 +16,7 @@
 #include "esp_ota_ops.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
-#include "apps/dhcpserver_options.h"
+//#include "apps/dhcpserver_options.h"
 #include "lwip/dns.h"
 #include "lwip/netif.h"
 
