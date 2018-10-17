@@ -22,6 +22,8 @@
 #include "token.h"
 #include "ttscurl.h"
 
+#include "simple_wifi.h"
+
 #define CONFIG_AC101_I2S_DATA_IN_PIN 35
 
 const char TTS_SCOPE[] = "audio_tts_post";
@@ -194,9 +196,17 @@ void app_main() {
 	}
 	ESP_ERROR_CHECK(ret);
 
+#if EXAMPLE_ESP_WIFI_MODE_AP
+	printf("ESP_WIFI_MODE_AP\n");
+	wifi_init_softap();
+#else
+	printf("ESP_WIFI_MODE_STA\n");
+	wifi_init_sta();
+#endif /*EXAMPLE_ESP_WIFI_MODE_AP*/
+
 //	audio_recorder_AC101_init();
 //	xTaskCreatePinnedToCore(&alexa__AC101_task, "alexa__AC101_task", 8096, NULL,
 //			2, NULL, 1);
-	xTaskCreatePinnedToCore(&tts_task, "tts", 8096, NULL, 2, NULL, 1);
+//	xTaskCreatePinnedToCore(&tts_task, "tts", 8096, NULL, 2, NULL, 1);
 }
 
