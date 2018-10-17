@@ -207,6 +207,6 @@ void app_main() {
 //	audio_recorder_AC101_init();
 //	xTaskCreatePinnedToCore(&alexa__AC101_task, "alexa__AC101_task", 8096, NULL,
 //			2, NULL, 1);
-//	xTaskCreatePinnedToCore(&tts_task, "tts", 8096, NULL, 2, NULL, 1);
+	xTaskCreatePinnedToCore(&tts_task, "tts", 8096 * 2, NULL, 2, NULL, 1);
 }
 
