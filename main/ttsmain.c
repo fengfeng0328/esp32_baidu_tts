@@ -48,7 +48,7 @@ RETURN_CODE fill_config(struct tts_config *config) {
     // #音量，取值0-9，默认为5中音量
     int vol = 5;
     // 下载的文件格式, 3：mp3(default) 4： pcm-16k 5： pcm-8k 6. wav
-	int aue = 3;
+	int aue = 4;
 
     // 将上述参数填入config中
     snprintf(config->api_key, sizeof(config->api_key), "%s", api_key);
@@ -184,6 +184,8 @@ static void tts_task(void *pvParameters) {
 	if (rescode != RETURN_OK) {
 		fprintf(stderr, "ERROR: %s, %d", g_demo_error_msg, rescode);
 	}
+//	while(1);
+//	printf("tts_task over!\n");
 	vTaskDelete(NULL);
 }
 
