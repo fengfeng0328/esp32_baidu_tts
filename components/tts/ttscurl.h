@@ -22,8 +22,8 @@ QueueHandle_t data_que;
 
 struct tts_info {
 	int len;
-	char data[2048];
-} tts_s, tts_r;
+	char data[2048];	// 需要与components/curl/include/curl/curl.h宏CURL_MAX_WRITE_SIZE一致
+};
 
 
 size_t writefunc_data(void *ptr, size_t size, size_t nmemb, struct http_result *result);

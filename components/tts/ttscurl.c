@@ -10,6 +10,8 @@
 
 const int MAX_HEADER_VALUE_LEN = 100;
 
+static struct tts_info tts_s;
+
 static RETURN_CODE search_header(const char *buffer, size_t len, const char *key, char *value) {
     size_t len_key = strlen(key);
     char header_key[len_key + 1];

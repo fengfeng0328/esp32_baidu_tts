@@ -15,7 +15,6 @@
 #include "sdkconfig.h"
 
 #include <curl/curl.h>
-//#include <memory.h>
 #include "string.h"
 #include "common.h"
 #include "ttsmain.h"
@@ -113,7 +112,7 @@ RETURN_CODE run_tts(struct tts_config *config, const char *token) {
     struct http_result result = {1, config->format ,NULL};
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback); // 检查头部
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, &result);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc_data);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc_data);	 // components/curl/include/curl/curl.h宏CURL_MAX_WRITE_SIZE决定最大传输长度
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);  // 需要释放
     curl_easy_setopt(curl, CURLOPT_VERBOSE, ENABLE_CURL_VERBOSE);
     CURLcode res_curl = curl_easy_perform(curl);
@@ -167,21 +166,19 @@ static void audio_recorder_AC101_init()
 	i2s_stop(I2S_NUM_0);
 }
 
-static void alexa__AC101_task(void *pvParameters)
-{
-	char buf[2048];
-	int recv_len=0;
-	i2s_start(I2S_NUM_0);
-	while(1)
-	{
-		recv_len=i2s_read_bytes(I2S_NUM_0,buf,2048,0);
-		i2s_write_bytes(I2S_NUM_0,buf,recv_len,0);
-	}
-}
+//static void alexa__AC101_task(void *pvParameters)
+//{
+//	char buf[2048];
+//	int recv_len=0;
+//	i2s_start(I2S_NUM_0);
+//	while(1)
+//	{
+//		recv_len=i2s_read_bytes(I2S_NUM_0,buf,2048,0);
+//		i2s_write_bytes(I2S_NUM_0,buf,recv_len,0);
+//	}
+//}
 
 static void tts_task(void *pvParameters) {
-	data_que = xQueueCreate(200, sizeof(struct tts_info));	// 625k内存
-
 	curl_global_init(CURL_GLOBAL_ALL);
 	RETURN_CODE rescode = run();
 	curl_global_cleanup();
@@ -189,16 +186,26 @@ static void tts_task(void *pvParameters) {
 		fprintf(stderr, "ERROR: %s, %d", g_demo_error_msg, rescode);
 	}
 
-	i2s_start(I2S_NUM_0);
-	while(1)
-	{
-		printf("## 2 ##");
-		xQueueReceive(data_que,&tts_r,portMAX_DELAY);
-		i2s_write_bytes(I2S_NUM_0,tts_r.data,tts_r.len,portMAX_DELAY);
-	}
-
 //	while(1);
 //	printf("tts_task over!\n");
+	vTaskDelete(NULL);
+}
+
+static void tts_play(void *pvParameters) {
+	struct tts_info tts_r;
+	i2s_start(I2S_NUM_0);
+	while (1) {
+		if (uxQueueMessagesWaiting(data_que) >= 10)
+			break;
+		vTaskDelay(10 / portTICK_PERIOD_MS);
+	}
+	while (1) {
+		if (uxQueueMessagesWaiting(data_que) == 0)
+			break;
+		xQueueReceive(data_que, &tts_r, portMAX_DELAY);
+		i2s_write_bytes(I2S_NUM_0, tts_r.data, tts_r.len, portMAX_DELAY);
+	}
+	i2s_stop(I2S_NUM_0);
 	vTaskDelete(NULL);
 }
 
@@ -211,6 +218,8 @@ void app_main() {
 	}
 	ESP_ERROR_CHECK(ret);
 
+	data_que = xQueueCreate(512, sizeof(struct tts_info));	// 1M+512*4k内存,放在app_main是因为多个任务使用该消息队列
+
 #if EXAMPLE_ESP_WIFI_MODE_AP
 	printf("ESP_WIFI_MODE_AP\n");
 	wifi_init_softap();
@@ -222,6 +231,8 @@ void app_main() {
 	audio_recorder_AC101_init();
 //	xTaskCreatePinnedToCore(&alexa__AC101_task, "alexa__AC101_task", 8096, NULL,
 //			2, NULL, 1);
-	xTaskCreatePinnedToCore(&tts_task, "tts", 8096 * 4, NULL, 2, NULL, 1);
+	xTaskCreatePinnedToCore(&tts_task, "tts_task", 8096 * 2, NULL, 2, NULL, 1);
+	xTaskCreatePinnedToCore(&tts_play, "tts_play", 8096, NULL, 2, NULL, 1);
+
 }
 
