@@ -24,6 +24,8 @@
 
 #include "simple_wifi.h"
 
+extern QueueHandle_t data_que;
+
 #define CONFIG_AC101_I2S_DATA_IN_PIN 35
 
 const char TTS_SCOPE[] = "audio_tts_post";
@@ -178,12 +180,23 @@ static void alexa__AC101_task(void *pvParameters)
 }
 
 static void tts_task(void *pvParameters) {
+	data_que = xQueueCreate(200, sizeof(struct tts_info));	// 625k内存
+
 	curl_global_init(CURL_GLOBAL_ALL);
 	RETURN_CODE rescode = run();
 	curl_global_cleanup();
 	if (rescode != RETURN_OK) {
 		fprintf(stderr, "ERROR: %s, %d", g_demo_error_msg, rescode);
 	}
+
+	i2s_start(I2S_NUM_0);
+	while(1)
+	{
+		printf("## 2 ##");
+		xQueueReceive(data_que,&tts_r,portMAX_DELAY);
+		i2s_write_bytes(I2S_NUM_0,tts_r.data,tts_r.len,portMAX_DELAY);
+	}
+
 //	while(1);
 //	printf("tts_task over!\n");
 	vTaskDelete(NULL);
@@ -206,9 +219,9 @@ void app_main() {
 	wifi_init_sta();
 #endif /*EXAMPLE_ESP_WIFI_MODE_AP*/
 
-//	audio_recorder_AC101_init();
+	audio_recorder_AC101_init();
 //	xTaskCreatePinnedToCore(&alexa__AC101_task, "alexa__AC101_task", 8096, NULL,
 //			2, NULL, 1);
-	xTaskCreatePinnedToCore(&tts_task, "tts", 8096 * 2, NULL, 2, NULL, 1);
+	xTaskCreatePinnedToCore(&tts_task, "tts", 8096 * 4, NULL, 2, NULL, 1);
 }
 

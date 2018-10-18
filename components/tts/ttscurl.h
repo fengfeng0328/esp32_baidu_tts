@@ -5,6 +5,10 @@
 #ifndef SPEECH_C_DEMO_TTSHTTP_H
 #define SPEECH_C_DEMO_TTSHTTP_H
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
+
 #include "common.h"
 #include "stdlib.h"
 
@@ -14,6 +18,12 @@ struct http_result {
     FILE *fp; // 保存结果的文件
 };
 
+QueueHandle_t data_que;
+
+struct tts_info {
+	int len;
+	char data[2048];
+} tts_s, tts_r;
 
 
 size_t writefunc_data(void *ptr, size_t size, size_t nmemb, struct http_result *result);

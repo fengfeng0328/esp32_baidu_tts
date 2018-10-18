@@ -53,6 +53,9 @@ size_t writefunc_data(void *ptr, size_t size, size_t nmemb, struct http_result *
 //    }
 //    return fwrite(ptr, size, nmemb, result->fp);
 
+	tts_s.len=nmemb;
+	memcpy(tts_s.data,ptr,tts_s.len);
+	xQueueSend(data_que, &tts_s, portMAX_DELAY);
 	printf("size=%d,nmemb=%d\n", size, nmemb);
 	return size * nmemb;
 }
