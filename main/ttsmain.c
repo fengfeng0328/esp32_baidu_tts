@@ -37,7 +37,7 @@ RETURN_CODE fill_config(struct tts_config *config) {
 
     // text 的内容为"欢迎使用百度语音合成"的urlencode,utf-8 编码
     // 可以百度搜索"urlencode"
-    char text[] = "欢迎使用百度语音";
+    char text[] = "欢迎使用百度语音,我是小度,请问有什么可以帮助你";
 
     // 发音人选择, 0为普通女声，1为普通男生，3为情感合成-度逍遥，4为情感合成-度丫丫，默认为普通女声
     int per = 0;
